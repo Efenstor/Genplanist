@@ -1,0 +1,26 @@
+*сплошная со стрелками 1, Сплошная со стрелками (x1) ->->->->->->->
+A,9.5,[TRACK1,ltypeshp.shx,R=75,S=2.5,X=-1.4,Y=.647],1,[TRACK1,ltypeshp.shx,R=-75,S=2.5,X=-2.4,Y=-.647],0
+*сплошная со стрелками 2, Сплошная со стрелками (x1.5) -->-->-->-->-->
+A,14.25,[TRACK1,ltypeshp.shx,R=75,S=2.5,X=-1.4,Y=.647],1,[TRACK1,ltypeshp.shx,R=-75,S=2.5,X=-2.4,Y=-.647],0
+*сплошная со стрелками 3, Сплошная со стрелками (x2) -->-->-->-->-->
+A,19,[TRACK1,ltypeshp.shx,R=75,S=2.5,X=-1.4,Y=.647],1,[TRACK1,ltypeshp.shx,R=-75,S=2.5,X=-2.4,Y=-.647],0
+*штриховая со стрелками 1, Штриховая со стрелками (x1) -> -> -> -> -> ->
+A,6.5,[TRACK1,ltypeshp.shx,R=75,S=2.5,X=-1.4,Y=.647],1,[TRACK1,ltypeshp.shx,R=-75,S=2.5,X=-2.4,Y=-.647],-3,0
+*штриховая со стрелками 2, Штриховая со стрелками (x2) -- -> -- -> -- ->
+A,6.5,-3,6.5,[TRACK1,ltypeshp.shx,R=75,S=2.5,X=-1.4,Y=.647],1,[TRACK1,ltypeshp.shx,R=-75,S=2.5,X=-2.4,Y=-.647],-3,0
+*штриховая со стрелками 3, Штриховая со стрелками (x3) -- -- -> -- -- ->
+A,6.5,-3,6.5,-3,6.5,[TRACK1,ltypeshp.shx,R=75,S=2.5,X=-1.4,Y=.647],1,[TRACK1,ltypeshp.shx,R=-75,S=2.5,X=-2.4,Y=-.647],-3,0
+*штриховая со стрелками 4, Штриховая со стрелками (x4) -- -- -- ->
+A,6.5,-3,6.5,-3,6.5,-3,6.5,[TRACK1,ltypeshp.shx,R=75,S=2.5,X=-1.4,Y=.647],1,[TRACK1,ltypeshp.shx,R=-75,S=2.5,X=-2.4,Y=-.647],-3,0
+*кабель A1, Кабель A1 (x1) <-> <-> <-> <-> <-> <->
+A,0.01,[TRACK1,ltypeshp.shx,R=105,S=1.5,X=1.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-105,S=1.5,X=0.4,Y=-.388],9.5,[TRACK1,ltypeshp.shx,R=75,S=1.5,X=-0.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-75,S=1.5,X=-1.4,Y=-.388],-3,0
+*кабель A2, Кабель A2 (x1.5) <--> <--> <--> <--> <-->
+A,0.01,[TRACK1,ltypeshp.shx,R=105,S=1.5,X=1.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-105,S=1.5,X=0.4,Y=-.388],14.25,[TRACK1,ltypeshp.shx,R=75,S=1.5,X=-0.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-75,S=1.5,X=-1.4,Y=-.388],-3,0
+*кабель A3, Кабель A3 (x2) <---> <---> <---> <--->
+A,0.01,[TRACK1,ltypeshp.shx,R=105,S=1.5,X=1.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-105,S=1.5,X=0.4,Y=-.388],19,[TRACK1,ltypeshp.shx,R=75,S=1.5,X=-0.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-75,S=1.5,X=-1.4,Y=-.388],-3,0
+*кабель B1, Кабель B1 (x1) <<->> <<->> <<->> <<->>
+A,0.01,[TRACK1,ltypeshp.shx,R=105,S=1.5,X=1.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-105,S=1.5,X=0.4,Y=-.388],1.5,[TRACK1,ltypeshp.shx,R=105,S=1.5,X=1.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-105,S=1.5,X=0.4,Y=-.388],7.5,[TRACK1,ltypeshp.shx,R=75,S=1.5,X=-0.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-75,S=1.5,X=-1.4,Y=-.388],1.5,[TRACK1,ltypeshp.shx,R=75,S=1.5,X=-0.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-75,S=1.5,X=-1.4,Y=-.388],-3,0
+*кабель B2, Кабель B2 (x1.5) <<-->> <<-->> <<-->>
+A,0.01,[TRACK1,ltypeshp.shx,R=105,S=1.5,X=1.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-105,S=1.5,X=0.4,Y=-.388],1.5,[TRACK1,ltypeshp.shx,R=105,S=1.5,X=1.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-105,S=1.5,X=0.4,Y=-.388],11.25,[TRACK1,ltypeshp.shx,R=75,S=1.5,X=-0.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-75,S=1.5,X=-1.4,Y=-.388],1.5,[TRACK1,ltypeshp.shx,R=75,S=1.5,X=-0.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-75,S=1.5,X=-1.4,Y=-.388],-3,0
+*кабель B3, Кабель B3 (x2) <<--->> <<--->> <<--->>
+A,0.01,[TRACK1,ltypeshp.shx,R=105,S=1.5,X=1.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-105,S=1.5,X=0.4,Y=-.388],1.5,[TRACK1,ltypeshp.shx,R=105,S=1.5,X=1.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-105,S=1.5,X=0.4,Y=-.388],15,[TRACK1,ltypeshp.shx,R=75,S=1.5,X=-0.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-75,S=1.5,X=-1.4,Y=-.388],1.5,[TRACK1,ltypeshp.shx,R=75,S=1.5,X=-0.4,Y=.388],1,[TRACK1,ltypeshp.shx,R=-75,S=1.5,X=-1.4,Y=-.388],-3,0
