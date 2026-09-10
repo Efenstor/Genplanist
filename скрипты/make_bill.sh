@@ -1,7 +1,7 @@
 #!/bin/sh
 # Bill Maker
 # Made by Efenstor, copyleft 2026
-version=1.0a
+version=1.0b
 
 # Template files
 template="шаблон_счёта.fods"
@@ -29,7 +29,7 @@ q_obj_title="Объект (необязательно)"
 q_obj_def=""
 q_addr_title="Адрес объекта (необязательно)"
 q_addr_def=""
-q_price_title="Стоимость работ"
+q_price_title="Стоимость"
 q_price_def=""
 
 # System

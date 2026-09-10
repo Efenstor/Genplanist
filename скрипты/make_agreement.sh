@@ -1,7 +1,7 @@
 #!/bin/sh
 # Agreement Maker
 # Made by Efenstor, copyleft 2026
-version=1.1a
+version=1.2
 
 # Template files
 template_prepay="шаблон_договора_с_авансом.fodt"
@@ -35,8 +35,10 @@ q_dline_title="Срок выполнения работ (необязатель�
 q_dline_def=""
 q_price_title="Стоимость работ"
 q_price_def=""
-q_prepayp_title="Аванс (процент)"
-q_prepayp_def="0"
+q_prepayp_title="Аванс в процентах (необязательно)"
+q_prepayp_def=""
+q_prepay_title="Аванс (укажите 0, если без аванса)"
+q_prepay_def="0"
 
 # System
 system_required="spellout whiptail"
@@ -264,6 +266,7 @@ if [ -f "$datafile" ]; then
   fi
   readval "price" "$datafile" q_price_def
   readval "prepayp" "$datafile" q_prepayp_def
+  readval "prepay" "$datafile" q_prepay_def
 fi
 
 # Questions
@@ -287,8 +290,16 @@ question "$q_dline_title" "$q_dline_def" 0 1 a_dline
 if [ $savedata -ne 0 ]; then saveval "dline" "$a_dline" "$datafile"; fi
 question "$q_price_title" "$q_price_def" 1 0 a_price
 if [ $savedata -ne 0 ]; then saveval "price" "$a_price" "$datafile"; fi
-question "$q_prepayp_title" "$q_prepayp_def" 1 0 a_prepayp
+question "$q_prepayp_title" "$q_prepayp_def" 1 1 a_prepayp
 if [ $savedata -ne 0 ]; then saveval "prepayp" "$a_prepayp" "$datafile"; fi
+# Prepare price and prepay values
+a_price=$(echo "$a_price" | sed "s/ //;s/,/./")  # rectify
+if [ "$prepayp" ]; then
+  a_prepay=$(echo "$a_price * ($a_prepayp/100)" | bc -l)
+  a_prepay=$(echo "($a_prepay + .5) / 1" | bc)  # make integer
+fi
+question "$q_prepay_title" "$q_prepay_def" 1 0 a_prepay
+if [ $savedata -ne 0 ]; then saveval "prepay" "$a_prepay" "$datafile"; fi
 
 # Prepare the output file name
 dname=$(dirname "$1")
@@ -300,7 +311,7 @@ else
 fi
 
 # Which template to use
-if [ "$a_prepayp" -gt 0 ]; then
+if [ "$a_prepay" -gt 0 ]; then
   template="$template_prepay"
 else
   template="$template_noprepay"
@@ -318,7 +329,7 @@ else
   stagcl=
 fi
 
-# Prepare values
+# Prepare the rest of the values
 a_jobfull="$stag""$a_job""$stagcl"
 if [ "$a_obj" ]; then
   a_jobfull="$a_jobfull""$r_obj_text""$stag"«"$a_obj"»"$stagcl"
@@ -327,10 +338,9 @@ if [ "$a_addr" ]; then
   a_jobfull="$a_jobfull""$r_addr_text""$stag""$a_addr""$stagcl"
 fi
 a_jobfull="$a_jobfull".
-a_price=$(echo "$a_price" | sed "s/ //;s/,/./")  # rectify
-a_prepay=$(echo "$a_price * ($a_prepayp/100)" | bc -l)
-a_prepay=$(echo "($a_prepay + .5) / 1" | bc)  # make integer
-a_finalpayp=$(echo "100 - $a_prepayp" | bc)
+if [ "$a_prepayp" ]; then
+  a_finalpayp=$(echo "100 - $a_prepayp" | bc)
+fi
 a_finalpay=$(echo "$a_price - $a_prepay" | bc)
 
 # Generate spellouts
@@ -369,11 +379,15 @@ if [ "$a_dline" ]; then
   replace "$r_dline" "$a_dline_spellout" "$tmpfile"
 fi
 replace "$r_price" "$a_price_gr рублей ($a_price_spellout)" "$tmpfile"
-if [ "$a_prepayp" -gt 0 ]; then
-  replace "$r_prepayp" "$a_prepayp%" "$tmpfile"
+if [ "$a_prepay" -gt 0 ]; then
+  if [ "$a_prepayp" ]; then
+    replace "$r_prepayp" "$a_prepayp%" "$tmpfile"
+  fi
   replace "$r_prepay" "$a_prepay_gr рублей ($a_prepay_spellout)" "$tmpfile"
 fi
-replace "$r_finalpayp" "$a_finalpayp%" "$tmpfile"
+if [ "$a_finalpayp" ]; then
+  replace "$r_finalpayp" "$a_finalpayp%" "$tmpfile"
+fi
 replace "$r_finalpay" "$a_finalpay_gr рублей ($a_finalpay_spellout)" "$tmpfile"
 
 # Convert to DOCX
