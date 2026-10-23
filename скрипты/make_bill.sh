@@ -1,7 +1,10 @@
 #!/bin/sh
 # Bill Maker
 # Made by Efenstor, copyleft 2026
-version=1.0b
+version=1.1
+
+# Use LibreOffice from Flatpak
+lo_flatpak=0
 
 # Template files
 template="шаблон_счёта.fods"
@@ -11,8 +14,8 @@ r_billnum="###НОМЕРСЧЁТА###"
 r_billdate="###ДАТАСЧЁТА###"
 r_num="###НОМЕР###"
 r_job="###РАБОТЫ###"
-r_price="###СТОИМОСТЬ###"
-r_price_spellout="###СТОИМОСТЬПР###"
+r_billprice="###СТОИМОСТЬ###"
+r_billprice_spellout="###СТОИМОСТЬПР###"
 r_obj_text=" по объекту "
 r_addr_text=", находящемуся по адресу: "
 
@@ -29,10 +32,13 @@ q_obj_title="Объект (необязательно)"
 q_obj_def=""
 q_addr_title="Адрес объекта (необязательно)"
 q_addr_def=""
-q_price_title="Стоимость"
-q_price_def=""
+q_billprice_title="Стоимость по счёту"
+q_billprice_def=""
 
 # System
+default_fname="genplanist"
+flatpak_pkg="org.libreoffice.LibreOffice"
+flatpak_tmp="$HOME/.var/app/org.libreoffice.LibreOffice/cache/tmp"
 system_required="spellout whiptail"
 spellout="spellout"
 
@@ -181,7 +187,11 @@ if [ $# -lt 1 ]; then
   -x: не сохранять вводимые данные в файл (только номер счёта)
   -t <файл>: файл шаблона (по умолчанию: \"$template\")
   -f: использовать выходной формат .fods (не конвертировать в .xlsx)
-" 
+  
+Примечания:
+  Чтобы использовать LibreOffice из Flatpak, отредактируйте в начале скрипта
+  переменную lo_flatpak, изменив её значение на 1 (lo_flatpak=1)
+"
   exit
 fi
 
@@ -225,7 +235,18 @@ if [ ! -d "$dname" ]; then
   exit 1
 fi
 if [ ! "$datafile" ]; then
+  # Try to find an existing data file
   datafile=$(find "$dname" -maxdepth 1 -type f -iname "*.dat" | sort -f | head -n 1)
+  if [ ! "$datafile" ]; then
+    # Prepare new file name
+    dname=$(dirname "$1")
+    fname=$(basename "$1")
+    if [ "$fname" ]; then
+      datafile="$dname"/"${fname%.*}".dat
+    else
+      datafile="$dname"/"$default_fname".dat
+    fi
+  fi
 fi
 
 # Read data file (if exists) and replace the defaults
@@ -236,7 +257,12 @@ if [ -f "$datafile" ]; then
   readval "job" "$datafile" q_job_def
   readval "obj" "$datafile" q_obj_def
   readval "addr" "$datafile" q_addr_def
+  q_price_def=
   readval "price" "$datafile" q_price_def
+  readval "billprice" "$datafile" q_billprice_def
+  if [ ! "$q_billprice_def" ]; then
+    q_billprice_def="$q_price_def"
+  fi
 fi
 
 # Questions
@@ -246,11 +272,17 @@ if [ ! "$q_billdate_def" ]; then
   q_billdate_def=$(date -I'date')
 fi
 question "$q_billdate_title" "$q_billdate_def" 0 0 a_billdate
+if [ $savedata -ne 0 ]; then saveval "billdate" "$a_billdate" "$datafile"; fi
 question "$q_num_title" "$q_num_def" 0 1 a_num
+if [ $savedata -ne 0 ]; then saveval "num" "$a_num" "$datafile"; fi
 question "$q_job_title" "$q_job_def" 0 0 a_job
+if [ $savedata -ne 0 ]; then saveval "job" "$a_job" "$datafile"; fi
 question "$q_obj_title" "$q_obj_def" 0 1 a_obj
+if [ $savedata -ne 0 ]; then saveval "obj" "$a_obj" "$datafile"; fi
 question "$q_addr_title" "$q_addr_def" 0 1 a_addr
-question "$q_price_title" "$q_price_def" 1 0 a_price
+if [ $savedata -ne 0 ]; then saveval "addr" "$a_addr" "$datafile"; fi
+question "$q_billprice_title" "$q_billprice_def" 1 0 a_billprice
+if [ $savedata -ne 0 ]; then saveval "billprice" "$a_billprice" "$datafile"; fi
 
 # Prepare the output file name
 dname=$(dirname "$1")
@@ -281,18 +313,22 @@ a_jobfull="$a_jobfull".
 if [ "$a_num" ]; then
   a_billnum="$a_billnum"-"$a_num"
 fi
-a_price=$(echo "$a_price" | sed "s/ //;s/,/./")  # rectify
+a_billprice=$(echo "$a_billprice" | sed "s/ //;s/,/./")  # rectify
 
 # Generate spellouts
 a_billdate_spellout=$(date --date "$a_billdate" +«%-d»\ %B\ %Y\ г.)
-spelloutprice "$a_price" 1 a_price_spellout
-a_price_spellout=$(echo "$a_price_spellout" | sed 's/^\(.\)/\u\1/')
+spelloutprice "$a_billprice" 1 a_billprice_spellout
+a_billprice_spellout=$(echo "$a_billprice_spellout" | sed 's/^\(.\)/\u\1/')
 
 # Generate grouped versions
-groupnumbers "$a_price" 1 a_price_gr
+groupnumbers "$a_billprice" 1 a_billprice_gr
 
 # Create the temporary files
-tmpfile=$(mktemp --suffix=.fods)
+if [ $lo_flatpak -gt 0 ]; then
+  tmpfile=$(mktemp --suffix=.fods -p "$flatpak_tmp")
+else
+  tmpfile=$(mktemp --suffix=.fods)
+fi
 tmpdir=$(dirname "$tmpfile")
 if [ $? -ne 0 ]; then
   echo "Не получается создать временный файл $tmpfile"
@@ -309,13 +345,18 @@ if [ "$stag" ]; then
 else
   replace "$r_job" "$a_jobfull" "$tmpfile"
 fi
-replace "$r_price" "$a_price_gr" "$tmpfile"
-replace "$r_price_spellout" "$a_price_spellout" "$tmpfile"
+replace "$r_billprice" "$a_billprice_gr" "$tmpfile"
+replace "$r_billprice_spellout" "$a_billprice_spellout" "$tmpfile"
 
 # Convert to XLSX
+if [ $lo_flatpak -gt 0 ]; then
+  lo_cmd="flatpak run $flatpak_pkg"
+else
+  lo_cmd="libreoffice"
+fi
 if [ $fods -eq 0 ]; then
   tmpxlsx="${tmpfile%.*}".xlsx
-  libreoffice --headless --convert-to xlsx --outdir "$tmpdir" "$tmpfile"
+  $lo_cmd --headless --convert-to xlsx --outdir "$tmpdir" "$tmpfile"
   mv "$tmpxlsx" "$outfile"
 else
   cp "$tmpfile" "$outfile"

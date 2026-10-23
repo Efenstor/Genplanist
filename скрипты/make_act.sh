@@ -1,7 +1,10 @@
 #!/bin/sh
 # Act Maker
 # Made by Efenstor, copyleft 2026
-version=1.1a
+version=1.2
+
+# Use LibreOffice from Flatpak
+lo_flatpak=0
 
 # Template files
 template="шаблон_акта.fodt"
@@ -32,6 +35,9 @@ q_price_title="Стоимость работ"
 q_price_def=""
 
 # System
+default_fname="genplanist"
+flatpak_pkg="org.libreoffice.LibreOffice"
+flatpak_tmp="$HOME/.var/app/org.libreoffice.LibreOffice/cache/tmp"
 system_required="spellout whiptail"
 spellout="spellout"
 
@@ -178,12 +184,15 @@ if [ $# -lt 1 ]; then
     файлов с расширением .dat, то будет использован первый по алфавиту.
     (по умолчанию: каталог выходного файла)
 
-
 Опции:
   -x: не сохранять вводимые данные в файл (только дата акта)
   -d: использовать текущую дату вместо данных из файла (только дата акта)
   -t <файл>: файл шаблона (по умолчанию: \"$template\")
   -f: использовать выходной формат .fodt (не конвертировать в .docx)
+  
+Примечания:
+  Чтобы использовать LibreOffice из Flatpak, отредактируйте в начале скрипта
+  переменную lo_flatpak, изменив её значение на 1 (lo_flatpak=1)
 " 
   exit
 fi
@@ -228,7 +237,18 @@ if [ ! -d "$dname" ]; then
   exit 1
 fi
 if [ ! "$datafile" ]; then
+  # Try to find an existing data file
   datafile=$(find "$dname" -maxdepth 1 -type f -iname "*.dat" | sort -f | head -n 1)
+  if [ ! "$datafile" ]; then
+    # Prepare new file name
+    dname=$(dirname "$1")
+    fname=$(basename "$1")
+    if [ "$fname" ]; then
+      datafile="$dname"/"${fname%.*}".dat
+    else
+      datafile="$dname"/"$default_fname".dat
+    fi
+  fi
 fi
 
 # Read data file (if exists) and replace the defaults
@@ -246,19 +266,25 @@ fi
 
 # Questions
 question "$q_num_title" "$q_num_def" 0 0 a_num
+if [ $savedata -ne 0 ]; then saveval "num" "$a_num" "$datafile"; fi
 if [ ! "$q_date_def" ]; then
   q_date_def=$(date --date="-1 month" -I'date')
 fi
 question "$q_date_title" "$q_date_def" 0 0 a_date
+if [ $savedata -ne 0 ]; then saveval "date" "$a_date" "$datafile"; fi
 if [ ! "$q_actdate_def" ]; then
   q_actdate_def=$(date -I'date')
 fi
 question "$q_actdate_title" "$q_actdate_def" 0 0 a_actdate
 if [ $savedata -ne 0 ]; then saveval "actdate" "$a_actdate" "$datafile"; fi
 question "$q_job_title" "$q_job_def" 0 0 a_job
+if [ $savedata -ne 0 ]; then saveval "job" "$a_job" "$datafile"; fi
 question "$q_obj_title" "$q_obj_def" 0 1 a_obj
+if [ $savedata -ne 0 ]; then saveval "obj" "$a_obj" "$datafile"; fi
 question "$q_addr_title" "$q_addr_def" 0 1 a_addr
+if [ $savedata -ne 0 ]; then saveval "addr" "$a_addr" "$datafile"; fi
 question "$q_price_title" "$q_price_def" 1 0 a_price
+if [ $savedata -ne 0 ]; then saveval "price" "$a_price" "$datafile"; fi
 
 # Prepare the output file name
 dname=$(dirname "$1")
@@ -297,7 +323,11 @@ a_actdate_spellout=$(date --date "$a_actdate" +«%-d»\ %B\ %Y\ г.)
 groupnumbers "$a_price" 0 a_price_gr
 
 # Create the temporary files
-tmpfile=$(mktemp --suffix=.fodt)
+if [ $lo_flatpak -gt 0 ]; then
+  tmpfile=$(mktemp --suffix=.fodt -p "$flatpak_tmp")
+else
+  tmpfile=$(mktemp --suffix=.fodt)
+fi
 tmpdir=$(dirname "$tmpfile")
 if [ $? -ne 0 ]; then
   echo "Не получается создать временный файл $tmpfile"
@@ -318,9 +348,14 @@ fi
 replace "$r_price" "$a_price_gr рублей ($a_price_spellout)" "$tmpfile"
 
 # Convert to DOCX
+if [ $lo_flatpak -gt 0 ]; then
+  lo_cmd="flatpak run $flatpak_pkg"
+else
+  lo_cmd="libreoffice"
+fi
 if [ $fodt -eq 0 ]; then
   tmpdocx="${tmpfile%.*}".docx
-  libreoffice --headless --convert-to docx --outdir "$tmpdir" "$tmpfile"
+  $lo_cmd --headless --convert-to docx --outdir "$tmpdir" "$tmpfile"
   mv "$tmpdocx" "$outfile"
 else
   cp "$tmpfile" "$outfile"

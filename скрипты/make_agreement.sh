@@ -1,7 +1,10 @@
 #!/bin/sh
 # Agreement Maker
 # Made by Efenstor, copyleft 2026
-version=1.2
+version=1.3
+
+# Use LibreOffice from Flatpak
+lo_flatpak=0
 
 # Template files
 template_prepay="шаблон_договора_с_авансом.fodt"
@@ -41,6 +44,9 @@ q_prepay_title="Аванс (укажите 0, если без аванса)"
 q_prepay_def="0"
 
 # System
+default_fname="genplanist"
+flatpak_pkg="org.libreoffice.LibreOffice"
+flatpak_tmp="$HOME/.var/app/org.libreoffice.LibreOffice/cache/tmp"
 system_required="spellout whiptail"
 spellout="spellout"
 
@@ -198,6 +204,10 @@ if [ $# -lt 1 ]; then
 Файлы шаблонов по умолчанию:
   Договор с авансом: \"$template_prepay\"
   Договор без аванса: \"$template_noprepay\"
+  
+Примечания:
+  Чтобы использовать LibreOffice из Flatpak, отредактируйте в начале скрипта
+  переменную lo_flatpak, изменив её значение на 1 (lo_flatpak=1)
 " 
   exit
 fi
@@ -227,14 +237,14 @@ fi
 datafile=
 if [ "$2" ]; then
   if [ -d "$2" ]; then
-    # Existing dir
     dname="$2"
-  else
-    # Existing or yet non-existing file
+  elif [ -f "$2" ]; then
     datafile="$2"
+  else
+    echo "Указанный файл/каталог данных не является файлом или каталогом"
+    exit 1
   fi
 else
-  # Use the destination file dir
   dname=$(dirname "$1")
 fi
 if [ ! -d "$dname" ]; then
@@ -248,7 +258,11 @@ if [ ! "$datafile" ]; then
     # Prepare new file name
     dname=$(dirname "$1")
     fname=$(basename "$1")
-    datafile="$dname"/"${fname%.*}".dat
+    if [ "$fname" ]; then
+      datafile="$dname"/"${fname%.*}".dat
+    else
+      datafile="$dname"/"$default_fname".dat
+    fi
   fi
 fi
 
@@ -358,7 +372,11 @@ groupnumbers "$a_prepay" 0 a_prepay_gr
 groupnumbers "$a_finalpay" 0 a_finalpay_gr
 
 # Create the temporary files
-tmpfile=$(mktemp --suffix=.fodt)
+if [ $lo_flatpak -gt 0 ]; then
+  tmpfile=$(mktemp --suffix=.fodt -p "$flatpak_tmp")
+else
+  tmpfile=$(mktemp --suffix=.fodt)
+fi
 tmpdir=$(dirname "$tmpfile")
 if [ $? -ne 0 ]; then
   echo "Не получается создать временный файл $tmpfile"
@@ -391,9 +409,14 @@ fi
 replace "$r_finalpay" "$a_finalpay_gr рублей ($a_finalpay_spellout)" "$tmpfile"
 
 # Convert to DOCX
+if [ $lo_flatpak -gt 0 ]; then
+  lo_cmd="flatpak run $flatpak_pkg"
+else
+  lo_cmd="libreoffice"
+fi
 if [ $fodt -eq 0 ]; then
   tmpdocx="${tmpfile%.*}".docx
-  libreoffice --headless --convert-to docx --outdir "$tmpdir" "$tmpfile"
+  $lo_cmd --headless --convert-to docx --outdir "$tmpdir" "$tmpfile"
   mv "$tmpdocx" "$outfile"
 else
   cp "$tmpfile" "$outfile"
