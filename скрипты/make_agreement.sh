@@ -1,7 +1,7 @@
 #!/bin/sh
 # Agreement Maker
 # Made by Efenstor, copyleft 2026
-version=1.31
+version=1.32
 
 # Use LibreOffice from Flatpak
 lo_flatpak=1
@@ -308,9 +308,9 @@ question "$q_prepayp_title" "$q_prepayp_def" 1 1 a_prepayp
 if [ $savedata -ne 0 ]; then saveval "prepayp" "$a_prepayp" "$datafile"; fi
 # Prepare price and prepay values
 a_price=$(echo "$a_price" | sed "s/ //;s/,/./")  # rectify
-if [ "$prepayp" ]; then
-  a_prepay=$(echo "$a_price * ($a_prepayp/100)" | bc -l)
-  a_prepay=$(echo "($a_prepay + .5) / 1" | bc)  # make integer
+if [ "$a_prepayp" ]; then
+  q_prepay_def=$(echo "$a_price * ($a_prepayp/100)" | bc -l)
+  q_prepay_def=$(echo "($q_prepay_def + .5) / 1" | bc)  # make integer
 fi
 question "$q_prepay_title" "$q_prepay_def" 1 0 a_prepay
 if [ $savedata -ne 0 ]; then saveval "prepay" "$a_prepay" "$datafile"; fi
