@@ -1,10 +1,10 @@
 #!/bin/sh
 # Agreement Maker
 # Made by Efenstor, copyleft 2026
-version=1.3
+version=1.31
 
 # Use LibreOffice from Flatpak
-lo_flatpak=0
+lo_flatpak=1
 
 # Template files
 template_prepay="шаблон_договора_с_авансом.fodt"
@@ -354,6 +354,8 @@ fi
 a_jobfull="$a_jobfull".
 if [ "$a_prepayp" ]; then
   a_finalpayp=$(echo "100 - $a_prepayp" | bc)
+else
+  a_finalpayp=100
 fi
 a_finalpay=$(echo "$a_price - $a_prepay" | bc)
 
@@ -403,9 +405,7 @@ if [ "$a_prepay" -gt 0 ]; then
   fi
   replace "$r_prepay" "$a_prepay_gr рублей ($a_prepay_spellout)" "$tmpfile"
 fi
-if [ "$a_finalpayp" ]; then
-  replace "$r_finalpayp" "$a_finalpayp%" "$tmpfile"
-fi
+replace "$r_finalpayp" "$a_finalpayp%" "$tmpfile"
 replace "$r_finalpay" "$a_finalpay_gr рублей ($a_finalpay_spellout)" "$tmpfile"
 
 # Convert to DOCX
