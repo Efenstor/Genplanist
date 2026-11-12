@@ -1,10 +1,10 @@
 #!/bin/sh
 # Bill Maker
 # Made by Efenstor, copyleft 2026
-version=1.1
+version=1.2
 
 # Use LibreOffice from Flatpak
-lo_flatpak=0
+lo_flatpak=1
 
 # Template files
 template="шаблон_счёта.fods"
@@ -24,6 +24,8 @@ q_billnum_title="Номер счёта (без номера договора)"
 q_billnum_def=""
 q_billdate_title="Дата счёта (в формате $(date -I))"
 q_billdate_def=""
+q_billtype_title="Тип счёта (необязательно, напр. \"авансовый платёж\")"
+q_billtype_def=""
 q_num_title="Номер договора (необязательно)"
 q_num_def=""
 q_job_title="Вид работ"
@@ -253,6 +255,7 @@ fi
 if [ -f "$datafile" ]; then
   readval "billnum" "$datafile" q_billnum_def
   readval "billdate" "$datafile" q_billdate_def
+  readval "billtype" "$datafile" q_billtype_def
   readval "num" "$datafile" q_num_def
   readval "job" "$datafile" q_job_def
   readval "obj" "$datafile" q_obj_def
@@ -273,6 +276,8 @@ if [ ! "$q_billdate_def" ]; then
 fi
 question "$q_billdate_title" "$q_billdate_def" 0 0 a_billdate
 if [ $savedata -ne 0 ]; then saveval "billdate" "$a_billdate" "$datafile"; fi
+question "$q_billtype_title" "$q_billtype_def" 0 1 a_billtype
+if [ $savedata -ne 0 ]; then saveval "billtype" "$a_billtype" "$datafile"; fi
 question "$q_num_title" "$q_num_def" 0 1 a_num
 if [ $savedata -ne 0 ]; then saveval "num" "$a_num" "$datafile"; fi
 question "$q_job_title" "$q_job_def" 0 0 a_job
@@ -302,7 +307,10 @@ else
 fi
 
 # Prepare values
-a_jobfull="$stag"$(echo "$a_job" | sed 's/^\(.\)/\u\1/')"$stagcl"
+if [ "$a_billtype" ]; then
+  a_jobfull="$stag"$(echo "$a_billtype" | sed 's/^\(.\)/\u\1/')". ""$stagcl"
+fi
+a_jobfull="$a_jobfull""$stag"$(echo "$a_job" | sed 's/^\(.\)/\u\1/')"$stagcl"
 if [ "$a_obj" ]; then
   a_jobfull="$a_jobfull""$r_obj_text""$stag"«"$a_obj"»"$stagcl"
 fi
